@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  expired
+  failed
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String    @unique
+  whatsapp      String
+  password      String
+  apiKey        String    @unique @default(cuid())
+  role          Role      @default(USER)
+  isVerified    Boolean   @default(false)
+  saldo         Int       @default(0)
+  
+  // Subscription
+  planId        String?
+  plan          SubscriptionPlan? @relation(fields: [planId], references: [id])
+  planExpiresAt DateTime?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  merchants     GomerchPay[]
+  transactions  Transaction[]
+  otps          OtpVerification[]
+  whitelistIps  WhitelistIp[]
+  subscriptionOrders SubscriptionOrder[]
+  orderKuotaMerchants OrderKuotaMerchant[]
+  digiflazzAccount DigiflazzAccount?
+  saldoLogs     SaldoLog[]
+
+  @@map("users")
+}
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("otp_verifications")
+}
+
+model GomerchPay {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectName   String
+  phoneNumber   String
+  accessToken   String   @db.Text
+  refreshToken  String   @db.Text
+  xUniqueid     String
+  qrString      String?  @db.Text
+  uniqueCodeDigits Int   @default(2)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  transactions  Transaction[]
+
+  @@map("go_merchants")
+}
+
+model Transaction {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Tool type: "GomerchPay" | "orderKuota"
+  toolType      String        @default("GomerchPay")
+
+  // GomerchPay (optional for OrderKuota transactions)
+  merchantId    String?
+  merchant      GomerchPay?   @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  // OrderKuota (optional for GomerchPay transactions)
+  okMerchantId  String?
+  okMerchant    OrderKuotaMerchant? @relation(fields: [okMerchantId], references: [id], onDelete: Cascade)
+  
+  trxId         String        @unique
+  refId         String
+  customerName  String?
+  amount        Int
+  uniqueCode    Int           @default(0)
+  totalAmount   Int
+  paymentStatus PaymentStatus @default(pending)
+  qrString      String?       @db.Text
+  
+  expiresAt     DateTime
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([refId, userId])
+  @@map("transactions")
+}
+
+model OrderKuotaMerchant {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectName      String
+  okId             String?            // ID user di OrderKuota (e.g. "2447632")
+  okUsername       String
+  okName           String?            // Display name dari OrderKuota
+  okAuthToken      String   @db.Text  // Token terenkripsi, tidak bisa diedit user
+  okBalance        String?            // Saldo terakhir (opsional)
+  qrString         String?  @db.Text
+  uniqueCodeDigits Int      @default(2)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  transactions     Transaction[]
+
+  @@map("orderkuota_merchants")
+}
+
+
+model SubscriptionPlan {
+  id              String   @id @default(cuid())
+  name            String
+  price           Int
+  durationDays    Int
+  maxMerchants    Int      @default(1)
+  maxWhitelistIps Int      @default(1)
+  prioritySupport Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  users           User[]
+  subscriptionOrders SubscriptionOrder[]
+
+  @@map("subscription_plans")
+}
+
+model WhitelistIp {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress String
+  label     String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, ipAddress])
+  @@map("whitelist_ips")
+}
+
+model SiteSettings {
+  id        String   @id @default("default")
+  siteTitle String   @default("MyCash Payment Gateway")
+  favicon   String?
+  logo      String?
+  qrisApiKey  String?
+  qrisProject String?
+  
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model SubscriptionOrder {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId        String
+  plan          SubscriptionPlan @relation(fields: [planId], references: [id])
+  
+  trxId         String        @unique
+  refId         String        @unique
+  amount        Int
+  uniqueCode    Int           @default(0)
+  totalAmount   Int
+  qrString      String?       @db.Text
+  qrImageUrl    String?       @db.Text
+  paymentStatus PaymentStatus @default(pending)
+  
+  expiresAt     DateTime
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("subscription_orders")
+}
+
+model DigiflazzAccount {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email           String
+  cookiesData     String   @db.LongText  // Encrypted cookies JSON
+  isConnected     Boolean  @default(true)
+  lastUsedAt      DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("digiflazz_accounts")
+}
+
+model SaldoLog {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount          Int              // +/- change
+  balanceBefore   Int
+  balanceAfter    Int
+  type            String           // "deposit" | "usage" | "admin_add" | "admin_reduce"
+  description     String?
+  
+  createdAt       DateTime @default(now())
+
+  @@map("saldo_logs")
+}

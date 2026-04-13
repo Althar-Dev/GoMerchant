@@ -1,0 +1,67 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth.uid == userId || isAdmin();
+      allow update: if true; 
+      
+      match /{allSubcollections=**} {
+        allow read: if request.auth.uid == userId || isAdmin() || true;
+        allow write: if request.auth.uid == userId || isAdmin();
+      }
+    }
+
+    match /t_merchant/{trackId} {
+      allow read, write: if true;
+    }
+
+    match /bot_logs/{logId} {
+      allow read: if isSignedIn();
+      allow create: if true;
+    }
+
+    match /business/settings {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/bot {
+      allow read: if true;
+      allow write: if isAdmin(); 
+    }
+
+    match /plans/{planId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true; 
+    }
+    
+    match /orkut_pending/{id} {
+      allow read, write: if true;
+    }
+    match /orkut_paid/{id} {
+      allow read, write: if true;
+    }
+    
+    match /otp_verifications/{email} {
+      allow read, write: if true;
+    }
+  }
+}

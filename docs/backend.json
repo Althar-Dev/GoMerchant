@@ -1,0 +1,146 @@
+
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "telegramId": { "type": "string" },
+        "role": { "type": "string", "enum": ["USER", "ADMIN"] },
+        "apiKey": { "type": "string" },
+        "saldo": { "type": "number" },
+        "planId": { "type": "string", "nullable": true },
+        "planExpiresAt": { "type": "object", "nullable": true },
+        "createdAt": { "type": "object" },
+        "updatedAt": { "type": "object" }
+      },
+      "required": ["id", "email", "displayName"]
+    },
+    "BotLog": {
+      "title": "BotLog",
+      "type": "object",
+      "description": "Log aktivitas bot telegram",
+      "properties": {
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "error", "success"] },
+        "timestamp": { "type": "object" }
+      }
+    },
+    "BusinessSettings": {
+      "title": "BusinessSettings",
+      "type": "object",
+      "description": "Pengaturan bisnis global sistem.",
+      "properties": {
+        "gopayBaseQr": { "type": "string", "description": "QRIS Statis GoPay Merchant Admin" },
+        "svaleBusinessId": { "type": "string", "description": "Business ID SValePay (SVP-XXXXX)" },
+        "svaleSecretKey": { "type": "string", "description": "Secret Key SValePay (svp_live_xxxx)" },
+        "updatedAt": { "type": "object" }
+      }
+    },
+    "TelegramBotSettings": {
+      "title": "TelegramBotSettings",
+      "type": "object",
+      "description": "Konfigurasi Bot Telegram Master",
+      "properties": {
+        "botToken": { "type": "string" },
+        "botUsername": { "type": "string", "nullable": true },
+        "webhookUrl": { "type": "string", "nullable": true },
+        "isActive": { "type": "boolean" },
+        "updatedAt": { "type": "object" }
+      }
+    },
+    "BotUserTrack": {
+      "title": "BotUserTrack",
+      "type": "object",
+      "description": "Data pelacakan user yang berinteraksi dengan bot",
+      "properties": {
+        "firstName": { "type": "string" },
+        "username": { "type": "string", "nullable": true },
+        "chatId": { "type": "number" },
+        "firstStartAt": { "type": "object" }
+      }
+    },
+    "SubscriptionPlan": {
+      "title": "SubscriptionPlan",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "durationDays": { "type": "number" },
+        "maxRequestsPerDay": { "type": "number" },
+        "maxWhitelistIps": { "type": "number" },
+        "prioritySupport": { "type": "boolean" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "object" }
+      },
+      "required": ["name", "price", "durationDays"]
+    },
+    "GomerchPay": {
+      "title": "GomerchPay",
+      "type": "object",
+      "description": "Data akun GoPay Merchant yang terhubung.",
+      "properties": {
+        "userId": { "type": "string" },
+        "projectName": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "accessToken": { "type": "string" },
+        "refreshToken": { "type": "string" },
+        "xUniqueid": { "type": "string" },
+        "qrString": { "type": "string", "nullable": true },
+        "uniqueCodeDigits": { "type": "number" },
+        "createdAt": { "type": "object" }
+      },
+      "required": ["userId", "projectName", "phoneNumber", "accessToken", "refreshToken", "xUniqueid"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "merchantId": { "type": "string", "nullable": true },
+        "toolType": { "type": "string" },
+        "trxId": { "type": "string" },
+        "refId": { "type": "string" },
+        "customerName": { "type": "string", "nullable": true },
+        "amount": { "type": "number" },
+        "uniqueCode": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "paymentStatus": { "type": "string", "enum": ["pending", "paid", "expired", "failed"] },
+        "qrString": { "type": "string", "nullable": true },
+        "paymentUrl": { "type": "string", "nullable": true },
+        "createdAt": { "type": "object" },
+        "expiresAt": { "type": "object" },
+        "paidAt": { "type": "object", "nullable": true }
+      },
+      "required": ["userId", "trxId", "amount", "totalAmount", "paymentStatus"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/backend/entities/User" },
+      "description": "Profil pengguna"
+    },
+    "/bot_logs/{logId}": {
+      "schema": { "$ref": "#/backend/entities/BotLog" },
+      "description": "Log aktivitas bot telegram"
+    },
+    "/business/settings": {
+      "schema": { "$ref": "#/backend/entities/BusinessSettings" },
+      "description": "Konfigurasi bisnis global"
+    },
+    "/settings/bot": {
+      "schema": { "$ref": "#/backend/entities/TelegramBotSettings" },
+      "description": "Konfigurasi Bot Telegram Master"
+    },
+    "/t_merchant/{trackId}": {
+      "schema": { "$ref": "#/backend/entities/BotUserTrack" },
+      "description": "Data pelacakan bot user"
+    }
+  }
+}
