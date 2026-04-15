@@ -1,11 +1,10 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth';
 
 /**
  * Setup Bot API (Admin Only)
  * Mendaftarkan URL webhook ke server Telegram.
- * Menggunakan domain pay-gomerch.web.id agar bypass middleware dashboard.
+ * Menggunakan environment variable agar fleksibel di VPS.
  */
 export async function POST(req: NextRequest) {
     try {
@@ -21,9 +20,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ status: 'error', message: 'Bot Token is required' }, { status: 400 });
         }
 
-        const webhookUrl = `https://pay-gomerch.web.id/bot/webhook`;
+        // Ambil base URL dari environment, default ke domain produksi jika tidak ada
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pay-gomerch.web.id';
+        const webhookUrl = `${baseUrl}/bot/webhook`;
 
-        console.log(`[Bot Setup] Registering Webhook: ${webhookUrl}`);
+        console.log(`[Bot Setup] Registering Webhook to: ${webhookUrl}`);
 
         const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
             method: 'POST',

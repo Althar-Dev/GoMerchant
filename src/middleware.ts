@@ -1,19 +1,23 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-
 export function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const hostname = req.headers.get('host') || '';
   const pathname = url.pathname;
 
+  // 1. Alias standar untuk semua domain
   if (pathname === '/signin') return NextResponse.rewrite(new URL('/login', req.url));
   if (pathname === '/signup') return NextResponse.rewrite(new URL('/register', req.url));
   
+  // 2. Bypass middleware untuk rute Bot (Webhook)
   if (pathname.startsWith('/bot/')) {
     return NextResponse.next();
   }
+
+  // 3. Deteksi Environment (Local vs VPS/Production)
   const isDev = hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('cloudworkstations.dev');
+  
   if (isDev) {
     if (pathname === '/dashboard') return NextResponse.rewrite(new URL('/user/dashboard', req.url));
     if (pathname === '/generate') return NextResponse.rewrite(new URL('/user/generate', req.url));
@@ -33,22 +37,26 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const dashDomain = 'dash.pay-gomerch.web.id';
-  const apiDomain = 'api.pay-gomerch.web.id';
-  const docsDomain = 'docs.pay-gomerch.web.id';
+  // 4. Konfigurasi Domain Produksi (Bisa diatur via .env di VPS)
+  const dashDomain = process.env.NEXT_PUBLIC_DASH_DOMAIN || 'dash.pay-gomerch.web.id';
+  const apiDomain = process.env.NEXT_PUBLIC_API_DOMAIN || 'api.pay-gomerch.web.id';
+  const docsDomain = process.env.NEXT_PUBLIC_DOCS_DOMAIN || 'docs.pay-gomerch.web.id';
 
+  // Routing Subdomain API
   if (hostname === apiDomain) {
     return NextResponse.rewrite(new URL(`/api${pathname}`, req.url));
   }
 
+  // Routing Subdomain Docs
   if (hostname === docsDomain) {
     return NextResponse.rewrite(new URL(`/docs${pathname === '/' ? '' : pathname}`, req.url));
   }
 
+  // Routing Subdomain Dashboard
   if (hostname === dashDomain) {
     if (pathname.startsWith('/api/')) return NextResponse.next();
 
-    // Mapping rute Admin
+    // Mapping rute Admin (Root logic)
     if (pathname === '/admin-panel' || pathname === '/admin') {
         return NextResponse.rewrite(new URL('/admin/dashboard', req.url));
     }
@@ -56,6 +64,8 @@ export function middleware(req: NextRequest) {
     if (pathname === '/website') return NextResponse.rewrite(new URL('/admin/website', req.url));
     if (pathname === '/plans') return NextResponse.rewrite(new URL('/admin/plans', req.url));
     if (pathname === '/members') return NextResponse.rewrite(new URL('/admin/members', req.url));
+
+    // Mapping rute User
     if (pathname === '/' || pathname === '/dashboard') return NextResponse.rewrite(new URL('/user/dashboard', req.url));
     if (pathname === '/generate') return NextResponse.rewrite(new URL('/user/generate', req.url));
     if (pathname === '/subscribe') return NextResponse.rewrite(new URL('/user/subscribe', req.url));
@@ -66,10 +76,12 @@ export function middleware(req: NextRequest) {
     
     if (pathname.startsWith('/detail/')) return NextResponse.rewrite(new URL(`/user${pathname}`, req.url));
 
+    // Pastikan folder internal tidak diakses langsung
     if (pathname.startsWith('/user/') || pathname.startsWith('/admin/')) {
         return NextResponse.next();
     }
 
+    // Default rewrite ke folder user untuk path lainnya di subdomain dash
     return NextResponse.rewrite(new URL(`/user${pathname}`, req.url));
   }
 
