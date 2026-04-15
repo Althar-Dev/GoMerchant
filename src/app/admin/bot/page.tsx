@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -6,15 +5,13 @@ import { useFirestore, useDoc, useCollection, useMemoFirebase, setDocumentNonBlo
 import { doc, serverTimestamp, collection, query, orderBy, limit } from 'firebase/firestore';
 import { 
     RefreshCw, 
-    MessageSquare, 
     Save, 
     Zap, 
     AlertCircle, 
     CheckCircle2, 
     Terminal as TerminalIcon,
     Smartphone,
-    Globe,
-    Link as LinkIcon
+    Globe
 } from 'lucide-react';
 
 interface BotSettings {
@@ -231,7 +228,7 @@ export default function MasterBotPage() {
                             <div className="flex gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500/20 border border-rose-500/50" />
                                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500/20 border border-amber-500/50" />
-                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/20 border border-emerald-500/50" />
+                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/20 border border-emerald-100/50" />
                             </div>
                         </div>
                         

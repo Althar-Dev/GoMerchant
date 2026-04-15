@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase/init';
 import { doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp, addDoc } from 'firebase/firestore';
@@ -7,7 +6,7 @@ import { normalizeAmount } from '@/lib/amountUtils';
 
 /**
  * Telegram Webhook Receiver
- * Dilengkapi dengan Extensive Logging ke Firestore bot_logs.
+ * Dilengkapi dengan Extensive Logging ke Firestore bot_logs agar Admin bisa memantau.
  */
 
 async function addBotLog(db: any, message: string, type: 'info' | 'error' | 'success' = 'info') {
@@ -29,11 +28,13 @@ export async function POST(req: NextRequest) {
     try {
         const update = await req.json();
         
+        // Ambil token bot dari settings
         const botSnap = await getDoc(doc(db, 'settings', 'bot'));
         const botSettings = botSnap.data();
         if (!botSettings?.botToken) return NextResponse.json({ ok: true });
         botToken = botSettings.botToken;
 
+        // Handle Pesan Masuk
         if (update.message?.text) {
             const chatId = update.message.chat.id;
             const text = update.message.text.trim().toLowerCase();
@@ -82,13 +83,17 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // Handle Klik Tombol (Callback)
         if (update.callback_query) {
             const callback = update.callback_query;
             const chatId = callback.from.id;
             const data = callback.data;
 
             await addBotLog(db, `Button clicked: "${data}" by User ID: ${chatId}`);
+            
+            // Jawab callback secepat mungkin agar jam pasir di Telegram hilang
             await answerCallback(botToken, callback.id);
+
             const usersRef = collection(db, 'users');
             const q = query(usersRef, where('telegramId', '==', chatId.toString()));
             const userSnap = await getDocs(q);
@@ -134,6 +139,7 @@ export async function POST(req: NextRequest) {
                 const page = parseInt(data.split('_')[1]) || 1;
                 await addBotLog(db, `Fetching mutations (Page ${page}) for ${u.displayName}`);
                 
+                // Ambil merchant pertama saja untuk bot monitoring
                 const mRef = collection(db, 'users', userDoc.id, 'GomerchPays');
                 const mSnap = await getDocs(mRef);
                 

@@ -11,6 +11,7 @@ export function middleware(req: NextRequest) {
   if (pathname === '/signup') return NextResponse.rewrite(new URL('/register', req.url));
   
   // 2. Bypass middleware untuk rute Bot (Webhook)
+  // Sangat penting agar Telegram bisa nembak ke /bot/webhook tanpa terhalang subdomain logic
   if (pathname.startsWith('/bot/')) {
     return NextResponse.next();
   }
@@ -37,7 +38,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 4. Konfigurasi Domain Produksi (Bisa diatur via .env di VPS)
+  // 4. Konfigurasi Domain Produksi (Diambil dari .env)
   const dashDomain = process.env.NEXT_PUBLIC_DASH_DOMAIN || 'dash.pay-gomerch.web.id';
   const apiDomain = process.env.NEXT_PUBLIC_API_DOMAIN || 'api.pay-gomerch.web.id';
   const docsDomain = process.env.NEXT_PUBLIC_DOCS_DOMAIN || 'docs.pay-gomerch.web.id';
@@ -56,7 +57,7 @@ export function middleware(req: NextRequest) {
   if (hostname === dashDomain) {
     if (pathname.startsWith('/api/')) return NextResponse.next();
 
-    // Mapping rute Admin (Root logic)
+    // Mapping rute Admin
     if (pathname === '/admin-panel' || pathname === '/admin') {
         return NextResponse.rewrite(new URL('/admin/dashboard', req.url));
     }
@@ -76,12 +77,10 @@ export function middleware(req: NextRequest) {
     
     if (pathname.startsWith('/detail/')) return NextResponse.rewrite(new URL(`/user${pathname}`, req.url));
 
-    // Pastikan folder internal tidak diakses langsung
     if (pathname.startsWith('/user/') || pathname.startsWith('/admin/')) {
         return NextResponse.next();
     }
 
-    // Default rewrite ke folder user untuk path lainnya di subdomain dash
     return NextResponse.rewrite(new URL(`/user${pathname}`, req.url));
   }
 
