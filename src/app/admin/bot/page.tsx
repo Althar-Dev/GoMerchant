@@ -13,7 +13,8 @@ import {
     CheckCircle2, 
     Terminal as TerminalIcon,
     Smartphone,
-    Trash2
+    Globe,
+    Link as LinkIcon
 } from 'lucide-react';
 
 interface BotSettings {
@@ -48,13 +49,16 @@ export default function MasterBotPage() {
     }, [firestore]);
     const { data: logs } = useCollection<BotLog>(logsQuery);
 
-    const [form, setForm] = useState({ botToken: '' });
+    const [form, setForm] = useState({ botToken: '', webhookUrl: '' });
     const [actionLoading, setActionLoading] = useState(false);
     const [msg, setMsg] = useState({ type: '', text: '' });
 
     useEffect(() => {
         if (botSettings) {
-            setForm({ botToken: botSettings.botToken || '' });
+            setForm({ 
+                botToken: botSettings.botToken || '',
+                webhookUrl: botSettings.webhookUrl || ''
+            });
         }
     }, [botSettings]);
 
@@ -64,7 +68,7 @@ export default function MasterBotPage() {
         }
     }, [logs]);
 
-    const handleSaveToken = async (e: React.FormEvent) => {
+    const handleSaveConfig = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!botSettingsRef) return;
         
@@ -74,18 +78,19 @@ export default function MasterBotPage() {
         try {
             setDocumentNonBlocking(botSettingsRef, {
                 botToken: form.botToken,
+                webhookUrl: form.webhookUrl,
                 updatedAt: serverTimestamp()
             }, { merge: true });
             
-            setMsg({ type: 'success', text: 'Token Bot berhasil disimpan!' });
+            setMsg({ type: 'success', text: 'Konfigurasi Bot berhasil disimpan!' });
         } catch (err) {
-            setMsg({ type: 'error', text: 'Gagal menyimpan token.' });
+            setMsg({ type: 'error', text: 'Gagal menyimpan konfigurasi.' });
         } finally {
             setActionLoading(false);
         }
     };
 
-    const handleSetWebhook = async () => {
+    const handleSetWebhookAuto = async () => {
         if (!form.botToken) {
             setMsg({ type: 'error', text: 'Simpan Bot Token terlebih dahulu.' });
             return;
@@ -118,7 +123,7 @@ export default function MasterBotPage() {
                 setMsg({ type: 'error', text: data.message || 'Gagal memasang webhook.' });
             }
         } catch (err) {
-            setMsg({ type: 'error', text: 'Terjadi kesalahan jaringan saat menghubungi server bot.' });
+            setMsg({ type: 'error', text: 'Terjadi kesalahan jaringan.' });
         } finally {
             setActionLoading(false);
         }
@@ -133,7 +138,7 @@ export default function MasterBotPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Master Bot Control</h1>
-                    <p className="text-slate-500 text-sm font-medium mt-1">Konfigurasi dan pantau aktivitas Bot Telegram secara real-time.</p>
+                    <p className="text-slate-500 text-sm font-medium mt-1">Konfigurasi manual atau otomatis Bot Telegram Anda.</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest border ${botSettings?.webhookUrl ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
@@ -156,10 +161,10 @@ export default function MasterBotPage() {
                             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
                                 <Smartphone className="w-5 h-5 text-[#619BF3]" />
                             </div>
-                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Bot Credentials</h2>
+                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Bot Configuration</h2>
                         </div>
 
-                        <form onSubmit={handleSaveToken} className="space-y-6">
+                        <form onSubmit={handleSaveConfig} className="space-y-6">
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Telegram Bot Token</label>
                                 <input 
@@ -172,6 +177,23 @@ export default function MasterBotPage() {
                                 />
                             </div>
 
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Manual Webhook URL</label>
+                                <div className="relative">
+                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                                    <input 
+                                        type="text" 
+                                        value={form.webhookUrl}
+                                        onChange={e => setForm({ ...form, webhookUrl: e.target.value })}
+                                        placeholder="https://dash.pay-gomerch.web.id/bot/webhook"
+                                        className="!rounded-xl border-slate-200 text-sm bg-slate-50 focus:bg-white transition-colors p-4 pl-11"
+                                    />
+                                </div>
+                                <p className="text-[9px] text-slate-400 mt-2 ml-1 font-medium italic">
+                                    Isi manual jika Anda melakukan setWebhook lewat browser.
+                                </p>
+                            </div>
+
                             <div className="flex flex-col gap-3 pt-2">
                                 <button 
                                     type="submit" 
@@ -179,11 +201,15 @@ export default function MasterBotPage() {
                                     className="btn btn-primary w-full !rounded-xl py-4 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-blue-100"
                                 >
                                     {actionLoading ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                                    Simpan Token
+                                    Simpan Konfigurasi
                                 </button>
+                                <div className="relative py-2">
+                                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div>
+                                    <div className="relative flex justify-center text-[9px] font-black uppercase text-slate-300 bg-white px-2 tracking-widest">Atau</div>
+                                </div>
                                 <button 
                                     type="button"
-                                    onClick={handleSetWebhook}
+                                    onClick={handleSetWebhookAuto}
                                     disabled={actionLoading || !form.botToken}
                                     className="btn btn-outline w-full !rounded-xl py-4 font-black uppercase tracking-widest text-[10px] border-emerald-100 text-emerald-600 hover:bg-emerald-50"
                                 >
