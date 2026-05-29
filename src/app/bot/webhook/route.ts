@@ -267,3 +267,4 @@ async function answerCallback(token: string, id: string) {
         body: JSON.stringify({ callback_query_id: id })
     });
 }
+

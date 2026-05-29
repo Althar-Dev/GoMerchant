@@ -50,3 +50,4 @@ function createEventEmitter<T extends Record<string, any>>() {
 
 export const errorEmitter = createEventEmitter<AppEvents>();
 
+

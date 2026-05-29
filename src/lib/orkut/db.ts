@@ -168,3 +168,4 @@ export async function getPaidTransaction(id: string): Promise<PaidTransaction | 
   return snap.data() as PaidTransaction;
 }
 
+
