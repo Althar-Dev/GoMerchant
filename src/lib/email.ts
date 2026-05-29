@@ -51,3 +51,4 @@ export async function sendOtpEmail(to: string, otp: string): Promise<boolean> {
     return true;
   }
 }
+

@@ -25,3 +25,4 @@ export function getSdks(firebaseApp: FirebaseApp) {
     firestore: getFirestore(firebaseApp)
   };
 }
+

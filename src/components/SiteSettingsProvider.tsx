@@ -78,3 +78,4 @@ export function SiteLogo({ size = 'md', showTitle = false }: { size?: 'sm' | 'md
         </span>
     );
 }
+

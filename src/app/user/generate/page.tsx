@@ -386,3 +386,4 @@ export default function GenerateQrisPage() {
         </div>
     );
 }
+

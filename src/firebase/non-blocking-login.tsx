@@ -25,3 +25,4 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
   signInWithEmailAndPassword(authInstance, email, password);
 }
+

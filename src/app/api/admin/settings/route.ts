@@ -23,3 +23,4 @@ export async function PUT(req: NextRequest) {
         message: 'Settings update is currently being migrated to Firebase. Please try again later.' 
     }, { status: 503 });
 }
+

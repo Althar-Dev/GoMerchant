@@ -167,3 +167,4 @@ export async function getPaidTransaction(id: string): Promise<PaidTransaction | 
   if (!snap.exists()) return null;
   return snap.data() as PaidTransaction;
 }
+

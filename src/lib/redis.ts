@@ -27,3 +27,4 @@ export const redis = globalForRedis.redis ?? createRedisClient();
 if (process.env.NODE_ENV !== 'production') globalForRedis.redis = redis;
 
 export default redis;
+

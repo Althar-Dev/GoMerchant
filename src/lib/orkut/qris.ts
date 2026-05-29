@@ -86,3 +86,4 @@ export function validateQris(qris: string): boolean {
   
   return providedCrc.toUpperCase() === calculatedCrc;
 }
+

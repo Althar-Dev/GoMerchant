@@ -235,3 +235,4 @@ model SaldoLog {
 
   @@map("saldo_logs")
 }
+

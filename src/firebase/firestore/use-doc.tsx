@@ -78,3 +78,4 @@ export function useDoc<T = any>(
 
   return { data, isLoading, error };
 }
+

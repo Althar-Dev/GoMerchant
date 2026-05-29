@@ -40,3 +40,4 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
     return NextResponse.json({ status: 'error', message: 'Not implemented' }, { status: 501 });
 }
+

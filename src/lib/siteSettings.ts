@@ -17,3 +17,4 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         logo: '/img/logo.png',
     };
 }
+
